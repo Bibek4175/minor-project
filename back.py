@@ -36,9 +36,9 @@ def index():
     if request.method == 'POST' and 'image' in request.files:
         # Save the uploaded image to the upload folder
         image = request.files['image']
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD'], filename))
-        image_filename = filename
+        im_file= secure_filename(image.filename)
+        image.save(os.path.join(app.config['UPLOAD'], im_file))
+        image_filename = im_file
     return render_template('index.html', image_filename=image_filename)
 
 @app.route('/uploads/<filename>')
@@ -49,6 +49,7 @@ def serve_image(filename):
 def upload_file():
     image = request.files['image']
     img = Image.open(image)
+    img.show()
     img_gray= img.convert('L')
     resize_img = img_gray.resize((28,28))
     x_data = np.array(resize_img).reshape(-1,28,28,1)
@@ -61,7 +62,7 @@ def upload_file():
     print(item_id)
 
     # Get recommended items
-    neighbors = NearestNeighbors(n_neighbors=5,algorithm='brute',metric='cosine')
+    neighbors = NearestNeighbors(n_neighbors=7,algorithm='brute',metric='cosine')
     neighbors.fit(output)
     distances,indices = neighbors.kneighbors(prediction)
     recommended_items = [fashion_data.iloc[index] for index in indices[0][1:]]
@@ -89,6 +90,8 @@ def upload_file():
 
     return jsonify(response)
 
+if not os.path.exists(app.config['UPLOAD']):
+    os.makedirs(app.config['UPLOAD'])
 
 if(__name__ == "__main__"):
     app.run()   
